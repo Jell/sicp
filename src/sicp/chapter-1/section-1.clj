@@ -1,4 +1,4 @@
-(ns sicp.chapter-1)
+(ns sicp.chapter-1.section-1)
 ;; 1.1
 
 10 ; => 10
