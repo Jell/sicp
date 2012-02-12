@@ -44,6 +44,9 @@
 
 ;; 1.3
 
+(defn square [n]
+  (* n n))
+
 (defn max-two [max1 max2 & args]
   (let [head (first args) more (rest args)]
     (cond (= head nil)  [max1 max2]
@@ -53,7 +56,7 @@
           :else         (recur max1 max2 more))))
 
 (defn max-two-square-and-sum [& args]
-  (apply + (map #(* % %) (apply max-two args))))
+  (apply + (map square (apply max-two args))))
 
 ;; 1.4
 
@@ -89,9 +92,6 @@
 (defn abs [n]
   {:post [(<= 0 %)]}
   (if (< 0 n) n (- n)))
-
-(defn square [n]
-  (* n n))
 
 (defn average [& args]
   {:pre [(< 0 (count args))]}
