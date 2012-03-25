@@ -76,3 +76,36 @@
   "5 * n^2"
   [n]
   (* 5 n n))
+
+;; 1.11
+
+(defn f1
+  "recursive definition"
+  [n]
+  (if (< n 3)
+    n
+    (+ (f1 (- n 1))
+       (* 2 (f1 (- n 2)))
+       (* 3 (f1 (- n 3))))))
+
+
+;; f(0) = 0
+;; f(1) = 1
+;; f(2) = 2
+;; f(3) = f(0) + 2*f(1) + 3*f(2)
+
+(defn f2-iter [a b c count]
+  (cond
+   (= count 2) c
+   (< count 2) count
+   :else (recur b
+                c
+                (+ c
+                   (* 2 b)
+                   (* 3 a))
+                (dec count))))
+
+(defn f2
+  "iterative definition"
+  [n]
+  (f2-iter 0 1 2 n))
