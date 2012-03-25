@@ -92,17 +92,17 @@
 ;; f(0) = 0
 ;; f(1) = 1
 ;; f(2) = 2
-;; f(3) = f(0) + 2*f(1) + 3*f(2)
+;; f(3) = f(2) + 2*f(1) + 3*f(0)
 
-(defn f2-iter [a b c count]
+(defn f2-iter [n-3 n-2 n-1 count]
   (cond
-   (= count 2) c
+   (= count 2) n-1
    (< count 2) count
-   :else (recur b
-                c
-                (+ c
-                   (* 2 b)
-                   (* 3 a))
+   :else (recur n-2
+                n-1
+                (+ n-1
+                   (* 2 n-2)
+                   (* 3 n-3))
                 (dec count))))
 
 (defn f2
