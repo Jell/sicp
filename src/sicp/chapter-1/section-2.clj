@@ -109,3 +109,40 @@
   "iterative definition"
   [n]
   (f2-iter 0 1 2 n))
+
+;; 1.12
+
+(defn pascal
+  "pascal recursive"
+  [n]
+  { :pre [(< 0 n)] }
+  (if (= n 1)
+    [1]
+    (let [previous (pascal (dec n))]
+      (vec (map +
+                (cons 0 previous)
+                (conj previous 0))))))
+
+;; 1.13
+
+;; Let phi = (1 + sqrt(5)) / 2
+;; Let psi = (1 - sqrt(5)) / 2
+;; Axiom:
+;; Fib(n) = (phi^n - psi^n) / sqrt(5)
+;; Fib(n + 1) = (phi^(n + 1) - psi^(n + 1)) / sqrt(5)
+
+;; Fib(n+2) = Fib(n+1) + Fib(n)
+;; Fib(n+2) = (phi^n - psi^n) / sqrt(5) + (phi^(n+1) - psi^(n+1)) / sqrt(5)
+;; Fib(n+2) = (phi^n + phi^(n+1) - psi^n - psi^(n+1)) / sqrt(5)
+;; Fib(n+2) = (phi^n + phi^n * phi - psi^n - psi^n * psi) / sqrt(5)
+;; Fib(n+2) = ((phi + 1) * phi^n - (psi + 1) * psi^n) / sqrt(5)
+;; Fib(n+2) = (phi^2 * phi^n - psi^2 * psi^n) / sqrt(5)
+;; Fib(n+2) = (phi^(n+2) - psi^(n+2)) / sqrt(5)
+
+;; If true for n and n+1, true for n+2
+
+;; True for Fib(0) and Fib(1), so true for all n > 1
+
+;; |psi^n / sqrt(5)| < 1 for all n > 0, so
+;; |Fib(n) - phi^n| < 1 for all n,
+;; So Fib(n) is the closest integer to phi^n / sqrt(5)
