@@ -248,4 +248,4 @@
 (deref counter)
 ;; => 8
 
-;; Conclusion: O(log(n))
+;; Conclusion: O(log(n) to the base 3)
