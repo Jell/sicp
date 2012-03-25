@@ -249,3 +249,26 @@
 ;; => 8
 
 ;; Conclusion: O(log(n) to the base 3)
+
+;; 1.16
+(defn fast-exp-iter [a b n]
+  (cond (= n 1) a
+        (even? n) (recur (* a (square b)) b (/ n 2))
+        :else (recur (* a b) b (- n 1))))
+
+(defn fast-exp [b n]
+  (fast-exp-iter 1 b n))
+
+;; 1.17
+
+(defn twice [n]
+  (* 2 n))
+(defn halve [n]
+  (/ n 2))
+
+(defn fast-*
+  "recursive fast multiplication"
+  [a b]
+  (cond (= b 0) 0
+        (even? b) (twice (fast-* a (halve b)))
+        :else (+ a (fast-* a (- b 1)))))
