@@ -207,3 +207,40 @@
 
 ;; Space: O(n)
 ;; Time: O(n) for each coin, so O(n^5) in total
+
+;; 1.15
+
+(def counter (atom 0))
+
+(defn cube [x]
+  (* x x x))
+
+(defn p [x]
+  (swap! counter inc)
+  (- (* 3 x) (* 4 (cube x))))
+
+(defn sine [angle]
+  (if (not (> (Math/abs angle) 0.1))
+    angle
+    (p (sine (/ angle 3.0)))))
+
+(sine 12.15)
+(deref counter)
+;; => 5
+
+(def counter (atom 0))
+(sine 10)
+(deref counter)
+;; => 5
+
+(def counter (atom 0))
+(sine 100)
+(deref counter)
+;; => 7
+
+(def counter (atom 0))
+(sine 1000)
+(deref counter)
+;; => 9
+
+;; Conclusion: O(log(n))
