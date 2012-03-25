@@ -234,13 +234,18 @@
 ;; => 5
 
 (def counter (atom 0))
-(sine 100)
+(sine 30)
+(deref counter)
+;; => 6
+
+(def counter (atom 0))
+(sine 90)
 (deref counter)
 ;; => 7
 
 (def counter (atom 0))
-(sine 1000)
+(sine 270)
 (deref counter)
-;; => 9
+;; => 8
 
 ;; Conclusion: O(log(n))
