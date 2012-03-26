@@ -251,6 +251,9 @@
 ;; Conclusion: O(log(n) to the base 3)
 
 ;; 1.16
+(defn square [n]
+  (* n n))
+
 (defn fast-exp-iter [a b n]
   (cond (= n 1) a
         (even? n) (recur (* a (square b)) b (/ n 2))
