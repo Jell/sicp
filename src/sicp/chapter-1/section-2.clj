@@ -272,3 +272,14 @@
   (cond (= b 0) 0
         (even? b) (twice (fast-* a (halve b)))
         :else (+ a (fast-* a (- b 1)))))
+
+;; 1.18
+(defn fast-*-iter [accu a b]
+  (cond (= b 0) accu
+        (even? b) (recur accu (twice a) (halve b))
+        :else (recur (+ accu a) a (- b 1))))
+
+(defn fast-*-2
+  "iterative fast multiplication"
+  [a b]
+  (fast-*-iter 0 a b))
