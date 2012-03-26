@@ -313,3 +313,93 @@
 
 (defn fast-fib [n]
   (fib-iter 1 0 0 1 n))
+
+;; 1.20
+
+(defn gcd [a b]
+  (if (= b 0)
+    a
+    (recur b (mod a b))))
+
+;; Normal order
+(comment
+
+  (gcd 206 40)
+
+  (if (= 40 0)
+    206
+    (recur 40 (mod 206 40)))
+
+  (if (= (mod 206 40) 0)
+    40
+    (recur (mod 206 40)
+           (mod 40 (mod 206 40))))
+  ;; 1
+  (if (= 6 0)
+    40
+    (recur (mod 206 40)
+           (mod 40 (mod 206 40))))
+
+  (if (= (mod 40 (mod 206 40)) 0)
+    (mod 206 40)
+    (recur (mod 40 (mod 206 40))
+           (mod (mod 206 40) (mod 40 (mod 206 40)))))
+  ;; 2
+  (if (= 4 0)
+    (mod 206 40)
+    (recur (mod 40 (mod 206 40))
+           (mod (mod 206 40) (mod 40 (mod 206 40)))))
+
+  (if (= (mod (mod 206 40) (mod 40 (mod 206 40))) 0)
+    (mod 40 (mod 206 40))
+    (recur (mod (mod 206 40) (mod 40 (mod 206 40)))
+           (mod (mod 40 (mod 206 40)) (mod (mod 206 40) (mod 40 (mod 206 40))))))
+  ;; 4
+  (if (= 2 0)
+    (mod 40 (mod 206 40))
+    (recur (mod (mod 206 40) (mod 40 (mod 206 40)))
+           (mod (mod 40 (mod 206 40)) (mod (mod 206 40) (mod 40 (mod 206 40))))))
+
+  (if (= (mod (mod 40 (mod 206 40)) (mod (mod 206 40) (mod 40 (mod 206 40)))) 0)
+    (mod (mod 206 40) (mod 40 (mod 206 40)))
+    (recur (mod (mod 40 (mod 206 40)) (mod (mod 206 40) (mod 40 (mod 206 40))))
+           (mod (mod (mod 206 40) (mod 40 (mod 206 40))) (mod (mod 40 (mod 206 40)) (mod (mod 206 40) (mod 40 (mod 206 40)))))))
+  ;; 7
+  (if (= 0 0)
+    (mod (mod 206 40) (mod 40 (mod 206 40)))
+    (recur (mod (mod 40 (mod 206 40)) (mod (mod 206 40) (mod 40 (mod 206 40))))
+           (mod (mod (mod 206 40) (mod 40 (mod 206 40))) (mod (mod 40 (mod 206 40)) (mod (mod 206 40) (mod 40 (mod 206 40)))))))
+  ;; 4
+  2
+ )
+
+
+;; Applicative order
+(comment
+
+  (gcd 206 40)
+
+  (if (= 40 0) 206 (recur 40 (mod 206 40)))
+  ;; 1
+  (recur 40 6)
+
+  (if (= 6 0) 40 (recur 6 (mod 40 6)))
+  ;; 1
+  (recur 6 4)
+
+  (if (= 4 0) 6 (recur 4 (mod 6 4)))
+  ;; 1
+  (recur 4 2)
+
+  (if (= 2 0) 4 (recur 2 (mod 4 2)))
+  ;; 1
+  (recur 2 0)
+
+  (if (= 0 0) 2 (recur 0 (mod 2 0)))
+
+  2
+
+  )
+
+;; Normal order: mod called 18 times
+;; Applicative order: mod called 4 times
