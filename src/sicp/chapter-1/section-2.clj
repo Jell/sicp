@@ -403,3 +403,24 @@
 
 ;; Normal order: mod called 18 times
 ;; Applicative order: mod called 4 times
+
+;; 1.21
+(defn divides? [a b]
+  (= (mod b a) 0))
+
+(defn find-divisor [n test-divisor]
+  (cond (> (square test-divisor) n) n
+        (divides? test-divisor n) test-divisor
+        :else (recur n (inc test-divisor))))
+
+(defn smallest-divisor [n]
+  (find-divisor n 2))
+
+(smallest-divisor 199)
+;; => 199
+
+(smallest-divisor 1999)
+;; => 1999
+
+(smallest-divisor 19999)
+;; => 7
