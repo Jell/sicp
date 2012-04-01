@@ -424,3 +424,56 @@
 
 (smallest-divisor 19999)
 ;; => 7
+
+;; 1.22
+(defn now []
+  (. System nanoTime))
+
+(defn prime? [n]
+  (= n (smallest-divisor n)))
+
+(defn report-prime [elapsed-time]
+  (print " *** Elapsed time: " (/ elapsed-time 1000000.0) " msecs")
+  true)
+
+(defn start-prime-test [n start-time]
+  (if (prime? n)
+    (report-prime (- (now) start-time))))
+
+(defn timed-prime-test [n]
+  (newline)
+  (print n)
+  (start-prime-test n (now)))
+
+(defn search-for-primes [min-value]
+  (for [n (iterate inc min-value)
+        :when (odd? n)
+        :when (timed-prime-test n)]
+    n))
+
+(take 3 (search-for-primes 1000))
+;; Elapsed time: 0.268 msec (too much jitter to be precise.)
+;; (1009 1013 1019)
+
+(take 3 (search-for-primes 10000))
+;; Elapsed time: 0.936
+;; (10007 10009 10037)
+
+(take 3 (search-for-primes 100000))
+;; Elapsed time: 1.81
+;; (100003 100019 100043)
+
+(take 3 (search-for-primes 1000000))
+;; Elapsed time: 3.429
+;; (1000003 1000033 1000037)
+
+;; Waaaay too fast to draw any conclusion, too much jitter between
+;; tests. Let's try with much larger numbers
+(take 3 (search-for-primes (bigint 1e11)))
+;; Elapsed time: 58ms
+(take 3 (search-for-primes (bigint 1e12)))
+;; Elapsed time: 187ms, ratio 3.22
+(take 3 (search-for-primes (bigint 1e13)))
+;; Elapsed time: 562ms, ratio 3.00
+
+;; Conclusion: That's right, ordo sqrt(n)
