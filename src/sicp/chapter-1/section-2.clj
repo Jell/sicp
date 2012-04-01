@@ -477,3 +477,49 @@
 ;; Elapsed time: 562ms, ratio 3.00
 
 ;; Conclusion: That's right, ordo sqrt(n)
+
+;; 1.23
+(defn next-test [n]
+  (if (= n 2)
+    3
+    (+ n 2)))
+
+(defn find-divisor [n test-divisor]
+  (cond (> (square test-divisor) n) n
+        (divides? test-divisor n) test-divisor
+        :else (recur n (next-test test-divisor))))
+
+(defn smallest-divisor [n]
+  (find-divisor n 2))
+
+(defn prime? [n]
+  (= n (smallest-divisor n)))
+
+(defn report-prime [elapsed-time]
+  (print " *** Elapsed time: " (/ elapsed-time 1000000.0) " msecs")
+  true)
+
+(defn start-prime-test [n start-time]
+  (if (prime? n)
+    (report-prime (- (now) start-time))))
+
+(defn timed-prime-test [n]
+  (newline)
+  (print n)
+  (start-prime-test n (now)))
+
+(defn search-for-primes [min-value]
+  (for [n (iterate inc min-value)
+        :when (odd? n)
+        :when (timed-prime-test n)]
+    n))
+
+(take 3 (search-for-primes (bigint 1e11)))
+;; Elapsed time: 34.7ms
+(take 3 (search-for-primes (bigint 1e12)))
+;; Elapsed time: 109ms
+(take 3 (search-for-primes (bigint 1e13)))
+;; Elapsed time: 328ms
+
+;; Improvement is < 2 beause ≈ 1/3 of the tested numbers are divisible
+;; by 3 and therefore this test does not improve anything for them.
