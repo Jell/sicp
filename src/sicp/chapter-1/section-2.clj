@@ -523,3 +523,88 @@
 
 ;; Improvement is < 2 beause ≈ 1/3 of the tested numbers are divisible
 ;; by 3 and therefore this test does not improve anything for them.
+
+;; 1.24
+
+(defn expmod [base exp m]
+  (cond (= exp 0) 1
+        (even? exp) (mod (square (expmod base (/ exp 2) m))
+                         m)
+        :else (mod (* base (expmod base (- exp 1) m))
+                   m)))
+
+(defn fermat-test [n]
+  (let [try-it (fn [a] (= (expmod a n n) a))]
+    (try-it (inc (bigint (rand (dec n)))))))
+
+(defn fast-prime? [n times]
+  (cond (= times 0) true
+        (fermat-test n) (recur n (dec times))
+        :else false))
+
+(defn start-prime-test [n start-time]
+  (if (fast-prime? n 1000)
+    (report-prime (- (now) start-time))))
+
+(defn timed-prime-test [n]
+  (newline)
+  (print n)
+  (start-prime-test n (now)))
+
+(defn search-for-primes [min-value]
+  (for [n (iterate inc min-value)
+        :when (odd? n)
+        :when (timed-prime-test n)]
+    n))
+
+(take 3 (search-for-primes (bigint 1e11)))
+(take 3 (search-for-primes (bigint 1e12)))
+(take 3 (search-for-primes (bigint 1e13)))
+
+;; 1.25
+
+;; It is slower because we jave to deal with very larger numbers.
+
+;; 1.26
+
+;; The code becomes O(n) because expmod is run twice.
+
+;; 1.27
+
+(defn full-fermat-test [n]
+  (every? true? (map #(= (expmod % n n) %) (range 1 (dec n)))))
+
+(full-fermat-test 561)
+;; => true
+(fast-prime? 561 1)
+;; => true
+(prime? 561)
+;;=> false
+
+;; 1.28
+(defn square* [x m]
+  (if (or (= x 1)
+          (= x (dec m))
+          (not= (mod (* x x) m) 1))
+    (* x x)
+    0))
+
+(defn expmod* [base exp m]
+  (cond (= exp 0) 1
+        (even? exp) (mod (square* (expmod* base (/ exp 2) m) m) m)
+        :else (mod (* base (expmod* base (- exp 1) m)) m)))
+
+(defn miller-rabin-test [n]
+  (let [a (inc (bigint (rand (dec n))))]
+    (= a (expmod* a n n))))
+
+(defn miller-rabin-fast-prime? [n times]
+  (cond (= times 0) true
+        (miller-rabin-test n) (recur n (dec times))
+        :else false))
+
+(miller-rabin 561)
+(miller-rabin-fast-prime? 561 10)
+;; => false
+(miller-rabin-fast-prime? 11 10)
+;; => true
