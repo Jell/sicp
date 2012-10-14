@@ -608,3 +608,113 @@
 ;; => false
 (miller-rabin-fast-prime? 11 10)
 ;; => true
+
+;; 1.29
+(defn sum [term a succ b]
+  (if (> a b)
+    0
+    (+ (term a)
+       (sum term (succ a) succ b))))
+
+(defn integral [f a b dx]
+  (* (sum f (+ a (/ dx 2.0)) #(+ % dx) b)
+     dx))
+
+(defn simpson-integral [f a b n]
+  {:pre [(even? n)
+         (> n 0)]}
+  (let [h (/ (- b a) n)
+        y (fn [k] (f (+ a (* k h))))
+        succ (fn [i] (* (y i)
+                        (cond (= 0 i) 1
+                              (= n i) 1
+                              (odd? i) 4
+                              (even? i) 2)))]
+    (* (/ h 3)
+       (sum succ 0 inc n))))
+
+(integral cube 0 1 0.001)
+;; => 0.249999875000001
+(simpson-integral cube 0 1 2)
+;; => 1/4 !!!
+
+;; 1.30
+(defn sum [term a succ b]
+  ((fn [a result]
+      (if (> a b)
+        result
+        (recur (succ a) (+ result (term a)))))
+    a 0))
+
+;; 1.31
+;; Recursive:
+(defn product [term a succ b]
+  (if (> a b)
+    1
+    (* (term a)
+       (product term (succ a) succ b))))
+
+;; Iterative:
+(defn product [term a succ b]
+  ((fn [a result]
+      (if (> a b)
+        result
+        (recur (succ a) (* result (term a)))))
+    a 1))
+
+(def factorial (partial product identity 1 inc))
+
+(defn quarter-pi [n]
+  (let [term #(float (if (even? %)
+                       (/ % (dec %))
+                       (/ (dec %) %)))]
+    (product term 3 inc (+ n 3))))
+
+(* 4 (quarter-pi 100000))
+;; => 3.1416048989792253
+
+;; 1.32
+;; Recursive
+(defn accumulate [combiner null-value term a succ b]
+  (if (> a b)
+    null-value
+    (combiner (term a)
+              (accumulate combiner null-value term (succ a) succ b))))
+
+;; Iterative
+(defn accumulate [combiner null-value term a succ b]
+  ((fn [a result]
+      (if (> a b)
+        result
+        (recur (succ a) (combiner result (term a)))))
+   a null-value))
+
+(def sum (partial accumulate + 0))
+(def product (partial accumulate * 1))
+
+;; 1.33
+
+(defn filtered-accumulate [combiner null-value term a succ b filter-fn]
+  ((fn [a result]
+     (if (> a b)
+       result
+       (if (filter-fn a)
+         (recur (succ a) (combiner result (term a)))
+         (recur (succ a) result))))
+   a null-value))
+
+(defn sum-square-primes [a b]
+  (filtered-accumulate + 0 square a inc b prime?))
+
+(reduce + (map square (filter prime? (range 1 10))))
+;; => 88
+(sum-square-primes 1 10)
+;; => 88
+
+(defn product-relative-primes [n]
+  (filtered-accumulate * 1 identity 1 inc n #(= (gcd % n) 1)))
+
+(reduce * (filter #(= (gcd % 10) 1) (range 1 10)))
+;; => 189
+(product-relative-primes 10)
+;; => 189
