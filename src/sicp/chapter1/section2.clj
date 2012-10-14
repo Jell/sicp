@@ -1,4 +1,4 @@
-(ns sicp.chapter-1.section-2)
+(ns sicp.chapter1.section2)
 
 ;; 1.9
 (defn ++ [a b]
