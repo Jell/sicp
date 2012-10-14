@@ -131,7 +131,7 @@
 
 (defn fixed-point [f first-guess]
   (letfn [(close-enough? [v1 v2]
-            (< (Math/abs (- v1 v2)) tolerance))
+            (< (abs (- v1 v2)) tolerance))
           (try-value [guess]
             (let [next (f guess)]
               (if (close-enough? guess next)
@@ -215,3 +215,94 @@
 ;; => 0.6483608274590866
 (tan-cf 10 100)
 ;; => 0.6483607
+
+;; 1.40
+(defn deriv [g]
+  (let [dx 0.00001]
+    (fn [x]
+      (/ (- (g (+ x dx)) (g x))
+         dx))))
+
+(defn newton-transform [g]
+  (fn [x]
+    (- x (/ (g x) ((deriv g) x)))))
+
+(defn newtons-method [g guess]
+  (fixed-point (newton-transform g) guess))
+
+(defn cubic [a b c]
+  (fn [x] (+ (cube x) (* a (square x)) (* b x) c)))
+
+(newtons-method (cubic 1 1 1) 1.0)
+;; => -0.9999999999997796 (pretty close to -1)
+
+;; 1.41
+
+(defn twice [f]
+  (fn [x] (f (f x))))
+
+(((twice (twice twice)) inc) 5)
+;; => 21
+
+;; 1.42
+
+(defn compose [f g]
+  (fn [x] (f (g x))))
+
+((compose square inc) 6)
+;; => 49
+
+;; 1.43
+
+(defn repeated [f n]
+  (if (zero? n)
+    identity
+    (reduce compose (repeat n f))))
+
+((repeated square 2) 5)
+;; => 625
+
+;; 1.44
+
+(defn smooth [f]
+  (let [dx 0.01]
+    (fn [x] (/ (+ (f (- x dx))
+                  (f x)
+                  (f (+ x dx)))
+               3))))
+
+(defn n-smooth [f n]
+  ((repeated smooth n) f))
+
+;; 1.45
+(defn average-damp [f]
+  (fn [x] (average x (f x))))
+
+(defn nth-root [x n]
+  (fixed-point ((repeated average-damp n)
+                (fn [y] (/ x (Math/pow y (dec n)))))
+               1.0))
+
+(nth-root 10000000000 10)
+;; => 10.0010073827908
+
+;; 1.46
+
+(defn iterative-improve [good-enough? improve]
+  (fn [guess]
+    (let [next (improve guess)]
+      (if (good-enough? guess next)
+        next
+        (recur next)))))
+
+(defn fixed-point [f guess]
+  (let [good-enough? #(< (Math/abs (- %1 %2)) tolerance)]
+    ((iterative-improve good-enough? f) guess)))
+
+(defn sqrt [x]
+  (letfn [(good-enough? [_ guess]
+            (> 0.001 (abs (/ (- (square guess) x)
+                             x))))
+          (improve [guess]
+            (average guess (float (/ x guess))))]
+    ((iterative-improve good-enough? improve) x)))

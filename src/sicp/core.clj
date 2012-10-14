@@ -1,6 +1,15 @@
 (ns sicp.core)
 
+(defn abs [n]
+  {:post [(<= 0 %)]}
+  (if (< 0 n) n (- n)))
+
+(defn average [& args]
+  {:pre [(< 0 (count args))]}
+  (/ (apply + args) (count args)))
+
 (defn square [x]
+  {:post [(<= 0 %)]}
   (* x x))
 
 (defn cube [x]
