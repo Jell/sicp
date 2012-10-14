@@ -718,3 +718,108 @@
 ;; => 189
 (product-relative-primes 10)
 ;; => 189
+
+;; 1.34
+
+(defn f [g]
+  (g 2))
+
+(f square)
+(f #(* % (+ % 1)))
+
+(comment
+  (f f))
+;; => Try to call 2 as a procedure. Hence an error.
+
+;; 1.35
+
+(def tolerance 0.00001)
+(defn cos [x] (Math/cos x))
+(defn sin [x] (Math/sin x))
+
+(defn fixed-point [f first-guess]
+  (letfn [(close-enough? [v1 v2]
+            (< (Math/abs (- v1 v2)) tolerance))
+          (try-value [guess]
+            (let [next (f guess)]
+              (if (close-enough? guess next)
+                next
+                (recur next))))]
+    (try-value first-guess)))
+
+(fixed-point cos 1.0)
+(fixed-point (fn [y] (+ (sin y) (cos y))) 1.0)
+
+;; phi² = phi + 1 => phi = 1 + 1/phi
+
+(defn golden-ratio []
+  (fixed-point (fn [phi] (+ 1 (/ 1 phi))) 1.0))
+
+(golden-ratio)
+;; => 1.6180327868852458
+
+;; 1.36
+(defn fixed-point* [f first-guess]
+  (letfn [(close-enough? [v1 v2]
+            (prn v1)
+            (< (Math/abs (- v1 v2)) tolerance))
+          (try-value [guess]
+            (let [next (f guess)]
+              (if (close-enough? guess next)
+                next
+                (recur next))))]
+    (try-value first-guess)))
+
+(fixed-point* (fn [x] (/ (Math/log 1000) (Math/log x))) 10.0)
+;; Without average damping: 33 steps
+
+(fixed-point* (fn [x] (/ (+ x (/ (Math/log 1000) (Math/log x)))
+                         2)) 10.0)
+;; With average damping: 9 steps
+
+;; 1.37
+
+(defn cont-frac [n d k]
+  (letfn [(f [j x]
+            (float (/ (n j)
+                      (+ (d j) x))))
+          (cont-frac-iter [j result]
+            (if (zero? j)
+              (f j result)
+              (recur (dec j) (f j result))))]
+    (cont-frac-iter k 0))
+  )
+
+(map #(/ 1 (cont-frac (constantly 1)
+                      (constantly 1)
+                      %))
+     (range 1 20))
+;; about 9 steps needed for a 4 decimals approximation
+
+;; 1.38
+
+(defn euler-d [n]
+  (if (zero? (mod (+ 2 n) 3))
+    (* 2 (/ (+ 2 n) 3))
+    1))
+
+(map euler-d (range 11))
+;; => (1 2 1 1 4 1 1 6 1 1 8)
+
+(+ 2 (cont-frac (constantly 1)
+                euler-d
+                10))
+
+;; => 2.718281865119934
+
+;; 1.39
+
+(defn tan-cf [x k]
+  (cont-frac (fn [n] (if (zero? n) x (- (square x))))
+             (fn [n] (inc (* 2 n)))
+             k))
+
+(Math/tan 10)
+;; => 0.6483608274590866
+(tan-cf 10 100)
+;; => 0.6483607
