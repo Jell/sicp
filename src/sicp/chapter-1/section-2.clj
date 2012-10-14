@@ -603,7 +603,7 @@
         (miller-rabin-test n) (recur n (dec times))
         :else false))
 
-(miller-rabin 561)
+(miller-rabin-test 561)
 (miller-rabin-fast-prime? 561 10)
 ;; => false
 (miller-rabin-fast-prime? 11 10)
