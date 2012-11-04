@@ -130,3 +130,75 @@
 
 (defn add [a b]
   (fn [f] (fn [x] ((a f) ((b f) x)))))
+
+;; 2.7
+(defn make-interval [a b] [a b])
+(defn upper-bound [[a b]] (max a b))
+(defn lower-bound [[a b]] (min a b))
+
+;; 2.8
+(defn add-interval [x y]
+  (make-interval (+ (lower-bound x) (lower-bound y))
+                 (+ (upper-bound x) (upper-bound y))))
+
+(defn mul-interval [x y]
+  (let [p1 (* (lower-bound x) (lower-bound y))
+        p2 (* (lower-bound x) (upper-bound y))
+        p3 (* (upper-bound x) (lower-bound y))
+        p4 (* (upper-bound x) (upper-bound y))]
+    (make-interval (min p1 p2 p3 p4)
+                   (max p1 p2 p3 p4))))
+
+(defn div-interval [x y]
+  (mul-interval x (make-interval (/ 1.0 (upper-bound y))
+                                 (/ 1.0 (lower-bound y)))))
+
+(defn sub-interval [x y]
+  (make-interval (- (lower-bound x) (upper-bound y))
+                 (- (upper-bound x) (lower-bound y))))
+
+;; 2.9
+(defn width [x]
+  (/ (- (upper-bound x)
+        (lower-bound x))
+     2))
+
+(comment
+  (width (add-interval x y))
+  = (width (make-interval (+ (lower-bound x) (lower-bound y))
+                          (+ (upper-bound x) (upper-bound y))))
+
+  = (/ (- (upper-bound (make-interval (+ (lower-bound x) (lower-bound y))
+                                      (+ (upper-bound x) (upper-bound y))))
+          (lower-bound (make-interval (+ (lower-bound x) (lower-bound y))
+                                      (+ (upper-bound x) (upper-bound y)))))
+       2)
+
+  = (/ (- (+ (upper-bound x) (upper-bound y))
+          (+ (lower-bound x) (lower-bound y)))
+       2)
+
+  = (/ (+ (- (upper-bound x) (lower-bound x))
+          (- (upper-bound y) (lower-bound y)))
+       2)
+
+  = (+ (/ (- (upper-bound x) (lower-bound x)) 2)
+       (/ (- (upper-bound y) (lower-bound y)) 2))
+
+  = (+ (width x) (width y))
+  )
+
+;; It is not true for the multiplications or divisions:
+
+(comment
+  (width (make-interval  0 2)) = 1
+  (width (make-interval -2 0)) = 1
+  (width (make-interval -4 0)) = 2
+  )
+
+;; 2.10
+
+(defn div-interval [x y]
+  {:pre [(pos? (width y))]}
+  (mul-interval x (make-interval (/ 1.0 (upper-bound y))
+                                 (/ 1.0 (lower-bound y)))))
