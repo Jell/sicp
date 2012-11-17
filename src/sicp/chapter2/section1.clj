@@ -202,3 +202,139 @@
   {:pre [(pos? (width y))]}
   (mul-interval x (make-interval (/ 1.0 (upper-bound y))
                                  (/ 1.0 (lower-bound y)))))
+
+;; 2.11
+
+;; 9 cases:
+
+;; + + + +
+;; + + - +
+;; + + - -
+;; - + + +
+;; - + - +
+;; - + - -
+;; - - + +
+;; - - - +
+;; - - - -
+(defn mul-interval [x y]
+  (let [xmin (lower-bound x)
+        xmax (upper-bound x)
+        ymin (lower-bound y)
+        ymax (upper-bound y)]
+    (cond (and (>= xmin 0) (>= xmax 0) (>= ymin 0) (>= ymax 0))
+          (make-interval (* xmin ymin) (* xmax ymax))
+
+          (and (>= xmin 0) (>= xmax 0) (<= ymin 0) (>= ymax 0))
+          (make-interval (* xmax ymin) (* xmax ymax))
+
+          (and (>= xmin 0) (>= xmax 0) (<= ymin 0) (<= ymax 0))
+          (make-interval (* xmax ymin) (* xmin ymax))
+
+          (and (<= xmin 0) (>= xmax 0) (>= ymin 0) (>= ymax 0))
+          (make-interval (* xmin ymax) (* xmax ymax))
+
+          (and (<= xmin 0) (>= xmax 0) (<= ymin 0) (>= ymax 0))
+          (make-interval (min (* xmax ymin) (* xmin ymax))
+                         (max (* xmin ymin) (* xmax ymax)))
+
+          (and (<= xmin 0) (>= xmax 0) (<= ymin 0) (<= ymax 0))
+          (make-interval (* xmax ymin) (* xmin ymin))
+
+          (and (<= xmin 0) (<= xmax 0) (>= ymin 0) (>= ymax 0))
+          (make-interval (* xmin ymax) (* xmax ymin))
+
+          (and (<= xmin 0) (<= xmax 0) (<= ymin 0) (>= ymax 0))
+          (make-interval (* xmin ymax) (* xmin ymin))
+
+          (and (<= xmin 0) (<= xmax 0) (<= ymin 0) (<= ymax 0))
+          (make-interval (* xmax ymax) (* xmin ymin)))))
+
+;; 2.12
+
+(defn make-center-width [c w]
+  (make-interval (- c w) (+ c w)))
+
+(defn center [i]
+  (/ (+ (lower-bound i) (upper-bound i)) 2))
+
+(defn width [i]
+  (/ (- (upper-bound i) (lower-bound i)) 2))
+
+(defn make-center-percent [c p]
+  (make-center-width c (* c (/ p 100.0))))
+
+(defn percent [i]
+  (* 100 (/ (width i) (center i))))
+
+;; 2.13
+
+;; Let's define two intervals A and B, such as:
+;; A = c_a - w_a, c_a + w_a
+;; B = c_b - w_b, c_b + w_b
+;; where all values are positive and w << c
+
+;; Let C = A * B
+
+;; from 2.10:
+;; C = (c_a-w_a)(c_b-w_b),
+;;     (c_a+w_a)(c_b+w_b)
+
+;; C = c_a*c_b - c_a*w_b - w_a*c_b + w_a*wb,
+;;     c_a*c_b + c_a*w_b + w_a*c_b + w_a*wb,
+
+;; w << c, so:
+;; C = c_a*c_b - c_a*w_b - w_a*c_b,
+;;     c_a*c_b + c_a*w_b + w_a*c_b,
+
+;; C = c_a*c_b - (c_a*w_b + w_a*c_b),
+;;     c_a*c_b + (c_a*w_b + w_a*c_b),
+
+;; (center C) = c_a*c_b
+;; (width C)  = c_a*w_b + w_a*c_b
+
+;; (percent C) = 100 * (width C) / (center C)
+
+;; (percent C) = 100 * (c_a*w_b + w_a*c_b) / (c_a * c_b)
+
+;; (percent C) = 100 * w_a / c_a + 100 * w_b / c_b
+
+;; (percent C) = (percent A) + (percent B)
+
+;; 2.14
+(defn par1 [r1 r2]
+  (div-interval (mul-interval r1 r2)
+                (add-interval r1 r2)))
+
+(defn par2 [r1 r2]
+  (let [one (make-interval 1 1)]
+    (div-interval one
+                  (add-interval (div-interval one r1)
+                                (div-interval one r2)))))
+
+(def a (make-interval 100 10))
+(def b (make-interval 100 5))
+
+(par1 a a)
+;; => [0.5 500]
+(center (par1 a a))
+;; => 250.25
+
+(par2 a a)
+;; => [0.5 50]
+(center (par2 a a))
+;; => 27.5
+
+(div-interval a a)
+;; =>  [0.1 10.0]
+(div-interval a b)
+;; =>  [0.1 20.0]
+
+;; 2.15
+;; par2 minimizes the numbers of operations that enlargen the width of
+;; the interval. "one" has a width of zero, so the only operation
+;; enlarging the interval with par2 is add-interval, whereas in par1
+;; there are 3 operations enlarging the interval.
+
+;; 2.16
+;; Nope.
+;; http://en.wikipedia.org/wiki/Interval_arithmetic#Dependency_problem
