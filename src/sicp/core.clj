@@ -31,3 +31,10 @@
   (if (= b 0)
     a
     (recur b (mod a b))))
+
+;; Scheme's accumulate is doing everything in the opposite...
+(defn accumulate [f start xs]
+  (reduce #(f %2 %1) start (reverse xs)))
+
+(def fold-left reduce)
+(def fold-right accumulate)

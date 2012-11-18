@@ -190,3 +190,109 @@
 
 ;; d.
 ;; No problemo!
+
+;; 2.30
+(defn square-tree [[x & xs]]
+  (let [x' (if (coll? x)
+             (square-tree x)
+             (square x))]
+    (if (empty? xs)
+      (list x')
+      (cons x' (square-tree xs)))))
+
+(square-tree '(1 (2 (3 4) 5) (6 7)))
+;;=> (1 (4 (9 16) 25) (36 49)))
+
+(defn square-tree [xs]
+  (map #(if (coll? %)
+          (square-tree %)
+          (square %))
+       xs))
+
+(square-tree '(1 (2 (3 4) 5) (6 7)))
+;;=> (1 (4 (9 16) 25) (36 49)))
+
+;; 2.31
+(defn tree-map [f xs]
+  (map #(if (coll? %)
+          (tree-map f %)
+          (f %))
+       xs))
+
+(tree-map square '(1 (2 (3 4) 5) (6 7)))
+;;=> (1 (4 (9 16) 25) (36 49)))
+
+;; 2.32
+(defn subsets [s]
+  (if (empty? s)
+    (list ())
+    (let [r (subsets (rest s))]
+      (concat r (map (partial cons (first s)) r)))))
+
+(subsets '(1 2 3))
+;;=> (() (3) (2) (2 3) (1) (1 3) (1 2) (1 2 3))
+
+;; 2.33
+
+(defn my-map [f xs]
+  (accumulate (fn [x accu] (cons (f x) accu)) '() xs))
+
+(defn append [seq1 seq2]
+  (accumulate cons seq2 seq1))
+
+(defn my-length [seq]
+  (accumulate (fn [_ accu] (inc accu)) 0 seq))
+
+;; 2.34
+(defn horner-eval [x coefficients]
+  (accumulate (fn [this-coeff higher-terms]
+                (+ this-coeff
+                   (* higher-terms x)))
+              0
+              coefficients))
+
+;; 2.35
+(defn count-leaves [tree]
+  (accumulate + 0 (map #(if (coll? %) (count-leaves %) 1) tree)))
+
+;; 2.36
+(defn accumulate-n [op init seqs]
+  (if (empty? (first seqs))
+    '()
+    (cons (accumulate op init (map first seqs))
+          (accumulate-n op init (map rest seqs)))))
+
+;; 2.37
+(defn dot-product [v w]
+  (accumulate + 0 (map * v w)))
+
+(defn matrix-*-vector [m v]
+  (map #(accumulate + 0 (map * % v)) m))
+
+(defn transpose [m]
+  (accumulate-n cons '() m))
+
+(defn matrix-*-matrix [m n]
+  (let [cols (transpose n)]
+    (map #(matrix-*-vector cols %) m)))
+
+;; 2.38
+
+(fold-right / 1 '(1 2 3))
+;;=> 3/2
+(fold-left / 1 '(1 2 3))
+;;=> 1/6
+(fold-right list '() '(1 2 3))
+;;=> (1 (2 (3 ())))
+(fold-left list '() '(1 2 3))
+;;=> (((() 3) 2) 1)
+
+;; For fold-left and fold-right to be equivalent, the operation should
+;; be commutative.
+
+;; 2.39
+(defn my-reverse [sequence]
+  (fold-left (fn [x y] (cons y x)) '() sequence))
+
+(defn my-reverse [sequence]
+  (fold-right (fn [x y] (concat y (list x))) '() sequence))
