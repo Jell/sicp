@@ -296,3 +296,109 @@
 
 (defn my-reverse [sequence]
   (fold-right (fn [x y] (concat y (list x))) '() sequence))
+
+;; 2.40
+(defn unique-pairs [n]
+  (mapcat (fn [i]
+            (map (fn [j] (list j i))
+                 (range (inc i) (inc n))))
+          (range 1 (inc n))))
+
+(defn prime-sum? [pair]
+  (prime? (+ (first pair)
+             (second pair))))
+
+(defn make-pair-sum [pair]
+  (list (first pair)
+        (second pair)
+        (+ (first pair) (second pair))))
+
+(defn prime-sum-pairs [n]
+  (map make-pair-sum
+       (filter prime-sum?
+               (unique-pairs n))))
+
+;; 2.41
+(defn ordered-triples [n]
+  (mapcat (fn [i]
+            (mapcat (fn [j]
+                      (map (fn [k]
+                             (list i j k))
+                           (range (inc j) (inc n))))
+                    (range (inc i) (inc n))))
+          (range 1 (inc n))))
+
+(defn ordered-triples-that-sums-to [n]
+  (filter #(= (reduce + %) n)
+          (ordered-triples (- n 3))))
+
+;; 2.42
+(defn make-position [row column] [row column])
+(defn position-row [[row column]] row)
+(defn position-column [[row column]] column)
+
+(def empty-board '())
+(defn adjoin-position [row column queens]
+  (cons (make-position row column) queens))
+
+(defn diagonal? [position1 position2]
+  (let [x1 (position-column position1)
+        y1 (position-row position1)
+        x2 (position-column position2)
+        y2 (position-row position2)]
+    (cond (and (= y1 y2) (= x1 x2)) true
+          (or (= y1 y2) (= x1 x2)) false
+          :else (= 1 (abs (/ (- x2 x1)
+                             (- y2 y1)))))))
+
+(defn safe? [column positions]
+  (let [position (first (filter #(= column (position-column %))
+                                positions))
+        other-positions (remove #{position} positions)
+        row (position-row position)]
+    (not (or (some #{row} (map position-row other-positions))
+             (some #{column} (map position-column other-positions))
+             (some (partial diagonal? position) other-positions)))))
+
+(defn queens [board-size]
+  (letfn [(queen-cols [k]
+            (if (zero? k)
+              (list empty-board)
+              (filter (partial safe? k)
+                      (mapcat (fn [rest-of-queens]
+                                (map (fn [new-row]
+                                       (adjoin-position new-row
+                                                        k
+                                                        rest-of-queens))
+                                     (range 1 (inc board-size))))
+                              (queen-cols (dec k))))))]
+    (queen-cols board-size)))
+
+(defn print-queens [qs]
+  (let [board-size (count qs)
+        empty-board (vec (repeat board-size
+                                 (vec (repeat (inc board-size) "|   "))))
+        full-board (reduce #(assoc-in %1 (mapv dec %2) "| X ") empty-board qs)]
+    (prn)
+    (doseq [row full-board]
+      (println (apply str (repeat (+ 2 board-size) "---")))
+      (println (apply str row)))
+    (println (apply str (repeat (+ 2 board-size) "---")))))
+
+(map print-queens (queens 6))
+
+;; 2.43
+(comment
+
+  (mapcat (fn [new-row]
+            (map (fn [rest-of-queens]
+                   (adjoin-position new-row
+                                    k
+                                    rest-of-queens))
+                 (queen-cols (dec k))))
+          (range 1 (inc board-size)))
+
+;; this is much slower because queen-cols is recomputed for every row, instead of once per column.
+;; If the first algorithm ran in T, the slow one would run in T to the
+;; power of the board size.
+  )
