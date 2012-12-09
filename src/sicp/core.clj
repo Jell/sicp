@@ -38,3 +38,6 @@
 
 (def fold-left reduce)
 (def fold-right accumulate)
+
+(defn memq [v xs]
+  (some #{v} xs))
