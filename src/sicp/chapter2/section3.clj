@@ -463,3 +463,236 @@
 (defn intersection-set-tree [set1 set2]
   (list->tree (intersection-set (tree->list set1)
                                 (tree->list set2))))
+
+;; 2.66
+
+(defn lookup [given-key set-of-records]
+  (cond (empty? set-of-records) false
+        (= given-key (:key (first set-of-records))) (first set-of-records)
+        :else (recur given-key (rest set-of-records))))
+
+(lookup :a [{:key :a} {:key :b}])
+
+(defn lookup [given-key set-of-records]
+  (if (empty? set-of-records)
+      false
+      (let [record (entry set-of-records)]
+        (cond (= given-key (:key record)) record
+
+              (< given-key (:key record))
+              (lookup given-key (left-branch set-of-records))
+
+              (> given-key (:key record))
+              (lookup given-key (right-branch set-of-records))))))
+
+(lookup 5 [{:key 10}
+           [{:key 5} [] []]
+           [{:key 11} [] []]] )
+
+;; 2.67
+(defn make-leaf [symbol weight]
+  (list :leaf symbol weight))
+
+(defn leaf? [object]
+  (= (first object) :leaf))
+
+(defn symbol-leaf [x]
+  (second x))
+
+(defn weight-leaf [x]
+  (last x))
+
+(defn left-branch [tree]
+  (first tree))
+
+(defn right-branch [tree]
+  (second tree))
+
+(defn symbols-tree [tree]
+  (nth tree 2))
+
+(defn symbols [object]
+  (if (leaf? object)
+    (list (symbol-leaf object))
+    (symbols-tree object)))
+
+(defn weight [tree]
+  (last tree))
+
+(defn make-code-tree [left right]
+  (list left
+        right
+        (concat (symbols left) (symbols right))
+        (+ (weight left) (weight right))))
+
+(defn choose-branch [bit branch]
+  (cond (= bit 0) (left-branch branch)
+        (= bit 1) (right-branch branch)
+        :else (throw "bad bit")))
+
+(defn decode [bits tree]
+  (letfn [(decode-1 [bits current-branch]
+            (if (empty? bits)
+              '()
+              (let [next-branch (choose-branch (first bits)
+                                               current-branch)]
+                (if (leaf? next-branch)
+                  (cons (symbol-leaf next-branch)
+                        (decode-1 (rest bits) tree))
+                  (decode-1 (rest bits) next-branch)))))]
+    (decode-1 bits tree)))
+
+(defn adjoin-set [x s]
+  (cond (empty? s) (list x)
+        (< (weight x) (weight (first s))) (cons x s)
+        :else (cons (first s)
+                    (adjoin-set x (rest s)))))
+
+(defn make-leaf-set [pairs]
+  (if (empty? pairs)
+    '()
+    (let [pair (first pairs)]
+      (adjoin-set (apply make-leaf pair)
+                  (make-leaf-set (rest pairs))))))
+
+(def sample-tree
+  (make-code-tree (make-leaf :A 4)
+                  (make-code-tree
+                   (make-leaf :B 2)
+                   (make-code-tree (make-leaf :D 1)
+                                   (make-leaf :C 1)))))
+
+(def sample-message '(0 1 1 0 0 1 0 1 0 1 1 1 0))
+
+(decode sample-message sample-tree)
+;;=> (:A :D :A :B :B :C :A)
+
+;; 2.68
+(defn encode-symbol [symbol tree]
+  (let [lb (left-branch tree)
+        rb (right-branch tree)]
+    (cond (element-of-set? symbol (symbols lb))
+          (cons 0 (if (leaf? lb) '() (encode-symbol symbol lb)))
+
+          (element-of-set? symbol (symbols rb))
+          (cons 1 (if (leaf? rb) '() (encode-symbol symbol rb)))
+
+          :else (throw "bad symbol"))))
+
+(defn encode [message tree]
+  (if (empty? message)
+    '()
+    (concat (encode-symbol (first message) tree)
+            (encode (rest message) tree))))
+
+(decode (encode '(:A :D :A :B :B :C :A) sample-tree) sample-tree)
+;;=> (:A :D :A :B :B :C :A)
+
+;; 2.69
+(defn successive-merge [branches]
+  (if (= (count branches) 2)
+    branches
+    (recur (adjoin-set (apply make-code-tree (take 2 branches))
+                       (drop 2 branches)))))
+
+(defn generate-huffman-tree [pairs]
+  (successive-merge (make-leaf-set pairs)))
+
+(encode '(:A :D :A :B :B :C :A)
+        (generate-huffman-tree '((:A 3) (:B 2) (:C 1) (:D 1))))
+;;=> (0 1 1 0 0 1 0 1 0 1 1 1 0)
+
+;; 2.70
+(def lyrics
+  "Get a job
+   Sha na na na na na na na na
+   Get a job
+   Sha na na na na na na na na
+   Wah yip yip yip yip yip yip yip yip yip
+   Sha boom")
+
+(def normalized-lyrics
+  (map upper-case (split lyrics #"\s+")))
+
+(def huffman-rock-pairs-set
+  (map (juxt first count)
+       (vals (group-by identity normalized-lyrics))))
+
+(def huffman-rock-tree
+  (generate-huffman-tree huffman-rock-pairs-set))
+
+(decode (encode normalized-lyrics huffman-rock-tree) huffman-rock-tree)
+;;=> ("GET" "A" "JOB" "SHA" "NA" "NA" "NA" "NA" "NA" "NA" "NA" "NA"
+;;    "GET" "A" "JOB" "SHA" "NA" "NA" "NA" "NA" "NA" "NA" "NA" "NA"
+;;    "WAH" "YIP" "YIP" "YIP" "YIP" "YIP" "YIP" "YIP" "YIP" "YIP"
+;;    "SHA" "BOOM")
+
+(count (encode normalized-lyrics huffman-rock-tree))
+;;=> 84 bits
+
+(count normalized-lyrics)
+;;=> 36 words
+(count huffman-rock-pairs-set)
+;;=> 8 different words, i.e 3 bits per word, i.e 108 bits required for
+;;   fixed encoding
+
+;; 2.71
+
+(defn symbols-set [n]
+  (map list (range n) (iterate #(* 2 %) 1)))
+
+(def five-symbols-tree
+  (generate-huffman-tree (symbols-set 5)))
+
+(comment
+  (((((:leaf 0 1)
+      (:leaf 1 2)
+      (0 1) 3)
+     (:leaf 2 4)
+     (0 1 2) 7)
+    (:leaf 3 8)
+    (0 1 2 3) 15)
+   (:leaf 4 16))
+  )
+
+
+(def ten-symbols-tree
+  (generate-huffman-tree (symbols-set 10)))
+
+(comment
+  ((((((((((:leaf 0 1)
+           (:leaf 1 2)
+           (0 1) 3)
+          (:leaf 2 4)
+          (0 1 2) 7)
+         (:leaf 3 8)
+         (0 1 2 3) 15)
+        (:leaf 4 16)
+        (0 1 2 3 4) 31)
+       (:leaf 5 32)
+       (0 1 2 3 4 5) 63)
+      (:leaf 6 64)
+      (0 1 2 3 4 5 6) 127)
+     (:leaf 7 128)
+     (0 1 2 3 4 5 6 7) 255)
+    (:leaf 8 256)
+    (0 1 2 3 4 5 6 7 8) 511)
+   (:leaf 9 512))
+  )
+
+;; Most frequent in both cases: 1
+
+(count (encode '(0) five-symbols-tree))
+;;=> 4 bits for least frequent symbol given five symbols
+
+(count (encode '(0) ten-symbols-tree))
+;;=> 9 bits for least frequent symbol given ten symbols
+
+;; 2.72
+
+;; The length of the least frequent symbol is n-1.
+
+;; In the worst case described in 2.71, the least frequent symbol
+;; requires n-1 lookups in sets of n, n-1, n-2... size respectivelly.
+;; Each of those lookups are O(n), so we can say that our encoding
+;; algorithm is O(n^2).
