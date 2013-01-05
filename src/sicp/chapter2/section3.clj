@@ -1,5 +1,5 @@
 (ns sicp.chapter2.section3
-  (use sicp.core))
+  (use sicp.core clojure.string))
 
 ;; 2.53
 
