@@ -431,3 +431,8 @@
 
 ;; Nothing was really needed, since no coercion to same type were
 ;; available. But now we can support both.
+
+;; 2.82
+
+;; TODO: continue here.
+;; Waited too long before continuing, lost track of the problem...

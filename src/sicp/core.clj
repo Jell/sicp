@@ -15,6 +15,9 @@
 (defn cube [x]
   (* x x x))
 
+(defn sqrt [x]
+  (Math/sqrt x))
+
 (defn prime? [n]
   (letfn [(divides? [a b]
             (= (mod b a) 0))
