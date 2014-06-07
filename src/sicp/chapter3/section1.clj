@@ -215,3 +215,37 @@
 (let [f (make-f)]
   (+<- (f 0) (f 1)))
 ;;=> 1
+
+;; 3.9
+
+(comment
+  global env -> [factorial -> (if (= n 1) 1 (* n (factorial (dec n))))]
+
+  (factorial 6)
+
+  E1 -> n: 6
+  E2 -> n: 5
+  E3 -> n: 4
+  E4 -> n: 3
+  E5 -> n: 2
+  E6 -> n: 1
+
+  )
+
+
+
+(comment
+  global env -> [factorial -> (fact-iter 1 1 n)
+                 fact-iter -> (...)]
+
+  (factorial 6)
+
+  E1 -> n: 6
+  E2 -> product: 1,   counter: 1, max-count: 6
+  E3 -> product: 2,   counter: 2, max-count: 6
+  E4 -> product: 6,   counter: 3, max-count: 6
+  E5 -> product: 24,  counter: 4, max-count: 6
+  E6 -> product: 120, counter: 5, max-count: 6
+  E7 -> product: 720, counter: 6, max-count: 6
+
+  )
